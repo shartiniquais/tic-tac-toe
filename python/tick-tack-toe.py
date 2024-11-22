@@ -69,6 +69,13 @@ def check_winner(player):
         return True
     return False
 
+def check_tie():
+    for row in range(BOARD_ROWS):
+        for col in range(BOARD_COLS):
+            if board[row][col] == " ":
+                return False
+    return True
+
 def draw_horizontal_winning_line(row, player):
     posY = row * SQUARE_SIZE + SQUARE_SIZE // 2
     color = CROSS_COLOR if player == 'X' else CIRCLE_COLOR
@@ -88,6 +95,7 @@ def draw_desc_diagonal(player):
     pygame.draw.line(screen, color, (15, 15), (WIDTH - 15, HEIGHT - 15), LINE_WIDTH)
 
 def restart():
+    game_over = False
     screen.fill(BG_COLOR)
     draw_lines()
     for row in range(BOARD_ROWS):
@@ -108,6 +116,20 @@ def draw_main_menu():
 
     return two_player_button, one_player_button
 
+def draw_one_player_menu():
+    screen.fill(BG_COLOR)
+    play_first_button = pygame.Rect(WIDTH // 4, HEIGHT // 3, WIDTH // 2, 60)
+    play_second_button = pygame.Rect(WIDTH // 4, HEIGHT // 2, WIDTH // 2, 60)
+    pygame.draw.rect(screen, BUTTON_COLOR, play_first_button)
+    pygame.draw.rect(screen, BUTTON_COLOR, play_second_button)
+
+    play_first_text = button_font.render("Play First", True, BUTTON_TEXT_COLOR)
+    play_second_text = button_font.render("Play Second", True, BUTTON_TEXT_COLOR)
+    screen.blit(play_first_text, (play_first_button.x + 50, play_first_button.y + 10))
+    screen.blit(play_second_text, (play_second_button.x + 50, play_second_button.y + 10))
+
+    return play_first_button, play_second_button
+
 def draw_end_menu():
     menu_button = pygame.Rect(WIDTH // 4, HEIGHT // 3, WIDTH // 2, 60)
     restart_button = pygame.Rect(WIDTH // 4, HEIGHT // 2, WIDTH // 2, 60)
@@ -121,10 +143,19 @@ def draw_end_menu():
 
     return menu_button, restart_button
 
+def ai_move():
+    empty_cells = [(row, col) for row in range(BOARD_ROWS) for col in range(BOARD_COLS) if board[row][col] == " "]
+    if empty_cells:
+        row, col = random.choice(empty_cells)
+        board[row][col] = 'O'
+
 player = 'X'
 game_over = False
 in_main_menu = True
 in_game = False
+in_one_player_menu = False
+one_player_mode = False
+player_starts = False
 
 draw_lines()
 
@@ -135,16 +166,38 @@ while True:
             pygame.quit()
             sys.exit()
         if in_main_menu:
+            game_over = False
             two_player_button, one_player_button = draw_main_menu()
             pygame.display.update()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if two_player_button.collidepoint(event.pos):
                     in_main_menu = False
                     in_game = True
+                    one_player_mode = False
                     restart()
                 elif one_player_button.collidepoint(event.pos):
-                    # For now, 1 Player mode does nothing
-                    pass
+                    in_main_menu = False
+                    in_one_player_menu = True
+        elif in_one_player_menu:
+            play_first_button, play_second_button = draw_one_player_menu()
+            pygame.display.update()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if play_first_button.collidepoint(event.pos):
+                    in_one_player_menu = False
+                    in_game = True
+                    one_player_mode = True
+                    player_starts = True
+                    restart()
+                elif play_second_button.collidepoint(event.pos):
+                    in_one_player_menu = False
+                    in_game = True
+                    one_player_mode = True
+                    player_starts = False
+                    restart()
+                    ai_move()
+                    draw_figures()
+                    player = 'X'
+                    
         elif in_game:
             if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
                 mouseX = event.pos[0]  # X coordinate
@@ -156,9 +209,19 @@ while True:
                 if board[clicked_row][clicked_col] == " ":
                     board[clicked_row][clicked_col] = player
                     game_over = check_winner(player)
+                    if not game_over and check_tie():
+                        game_over = True
                     player = 'O' if player == 'X' else 'X'
 
                 draw_figures()
+
+                if one_player_mode and not game_over and player == 'O':
+                    ai_move()
+                    game_over = check_winner('O')
+                    if not game_over and check_tie():
+                        game_over = True
+                    player = 'X'
+                    draw_figures()
             if game_over:
                 menu_button, restart_button = draw_end_menu()
                 pygame.display.update()
@@ -170,5 +233,7 @@ while True:
                         restart()
                         player = 'X'
                         game_over = False
+                        if one_player_mode and not player_starts:
+                            ai_move()
 
         pygame.display.update()
