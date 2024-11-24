@@ -1,0 +1,27 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #1ca79c;
+}
+#menu, #game, #endMenu, #onePlayerMenu {
+    display: none;
+}
+#menu.active, #game.active, #endMenu.active, #onePlayerMenu.active {
+    display: block;
+}
+button {
+    padding: 15px 30px;
+    font-size: 20px;
+    color: #fff;
+    background-color: #323edd;
+    border: none;
+    cursor: pointer;
+    margin: 10px;
+}
+canvas {
+    background-color: #fff;
+    border: 3px solid #179187;
+}
