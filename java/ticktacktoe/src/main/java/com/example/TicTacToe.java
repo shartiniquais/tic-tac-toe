@@ -1,5 +1,9 @@
 package com.example;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -22,8 +26,10 @@ public class TicTacToe extends Application {
 
     private static final int BOARD_SIZE = 3;
     private String currentPlayer = "X";
+    private String startingPlayer = "X"; // Keeps track of who starts the game
     private boolean gameOver = false;
-    private final Text[][] board = new Text[BOARD_SIZE][BOARD_SIZE];
+    private boolean isAIEnabled = false;
+    private Text[][] board;
     private Pane linePane; // Separate Pane for the winning line
     private StackPane gameStackPane; // Container for the game grid
     private Line winningLine;
@@ -33,6 +39,8 @@ public class TicTacToe extends Application {
     private Button restartButton;
     private Button mainMenuButton;
     private VBox buttonContainer;
+    private Random random = new Random();
+    private Scene menuScene;
 
     @Override
     public void start(Stage primaryStage) {
@@ -45,7 +53,7 @@ public class TicTacToe extends Application {
         Button onePlayerButton = new Button("1 Player");
         mainMenu.getChildren().addAll(twoPlayersButton, onePlayerButton);
 
-        Scene menuScene = new Scene(mainMenu, 400, 400);
+        menuScene = new Scene(mainMenu, 400, 400);
         primaryStage.setScene(menuScene);
         primaryStage.show();
 
@@ -71,6 +79,58 @@ public class TicTacToe extends Application {
             primaryStage.setScene(menuScene);
         });
 
+        // Set up actions for "Play First" and "Play Second"
+        playFirstButton.setOnAction(event -> {
+            isAIEnabled = true;
+            startingPlayer = "X";
+            currentPlayer = startingPlayer;
+            gameOver = false;
+            initializeBoard();
+            primaryStage.setScene(getGameScene(primaryStage));
+        });
+
+        playSecondButton.setOnAction(event -> {
+            isAIEnabled = true;
+            startingPlayer = "O";
+            currentPlayer = startingPlayer;
+            gameOver = false;
+            initializeBoard();
+            primaryStage.setScene(getGameScene(primaryStage));
+            makeAIMove(); // AI makes the first move
+        });
+
+        // Main menu button actions
+        twoPlayersButton.setOnAction(event -> {
+            isAIEnabled = false;
+            startingPlayer = "X";
+            currentPlayer = startingPlayer;
+            gameOver = false;
+            initializeBoard();
+            primaryStage.setScene(getGameScene(primaryStage));
+        });
+    }
+
+    /**
+     * Initializes the game board.
+     */
+    private void initializeBoard() {
+        board = new Text[BOARD_SIZE][BOARD_SIZE];
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                board[row][col] = new Text("");
+                board[row][col].setFont(Font.font(36));
+            }
+        }
+    }
+    
+
+   /**
+     * Creates and returns the game scene.
+     *
+     * @param primaryStage The main stage.
+     * @return the game scene.
+     */
+    private Scene getGameScene(Stage primaryStage) {
         // Game layout
         gameStackPane = new StackPane();
         gameStackPane.setAlignment(Pos.CENTER); // Ensure the grid is centered
@@ -87,13 +147,9 @@ public class TicTacToe extends Application {
                 cell.setFill(Color.LIGHTGRAY);
                 cell.setStroke(Color.BLACK);
 
-                Text text = new Text("");
-                text.setFont(Font.font(36));
-                board[row][col] = text;
-
                 StackPane cellContainer = new StackPane();
                 cellContainer.setAlignment(Pos.CENTER);
-                cellContainer.getChildren().addAll(cell, text);
+                cellContainer.getChildren().addAll(cell, board[row][col]);
 
                 final int currentRow = row;
                 final int currentCol = col;
@@ -113,7 +169,7 @@ public class TicTacToe extends Application {
 
         // Main menu button
         mainMenuButton = new Button("Main Menu");
-        mainMenuButton.setOnAction(event -> primaryStage.setScene(menuScene));
+        mainMenuButton.setOnAction(event -> resetToMainMenu(primaryStage));
         mainMenuButton.setVisible(false); // Hide the main menu button initially
 
         // VBox containing the restart and main menu buttons
@@ -129,16 +185,9 @@ public class TicTacToe extends Application {
         gameContainer.setAlignment(Pos.CENTER);
         gameContainer.getChildren().addAll(gameStackPane, buttonContainer);
 
-        Scene gameScene = new Scene(gameContainer, 400, 500);
-
-        // Main menu button actions
-        twoPlayersButton.setOnAction(event -> {
-            currentPlayer = "X";
-            gameOver = false;
-            resetBoard();
-            primaryStage.setScene(gameScene);
-        });
+        return new Scene(gameContainer, 400, 500);
     }
+
 
     /**
      * Handles a player's move at the specified row and column.
@@ -165,8 +214,35 @@ public class TicTacToe extends Application {
             return;
         }
 
-        // Switch to the other player
+        // Switch to the other player or AI
         currentPlayer = currentPlayer.equals("X") ? "O" : "X";
+        
+        // If AI is enabled and it's the AI's turn, make a move
+        if (isAIEnabled && currentPlayer.equals("O")) {
+            makeAIMove();
+        }
+    }
+
+    /**
+     * Makes a move for the AI player.
+     */
+    private void makeAIMove() {
+        List<int[]> availableMoves = new ArrayList<>();
+
+        // Find all available moves
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                if (board[row][col].getText().isEmpty()) {
+                    availableMoves.add(new int[]{row, col});
+                }
+            }
+        }
+
+        // Select a random move
+        if (!availableMoves.isEmpty()) {
+            int[] move = availableMoves.get(random.nextInt(availableMoves.size()));
+            handlePlayerMove(move[0], move[1]);
+        }
     }
 
     /**
@@ -202,6 +278,23 @@ public class TicTacToe extends Application {
             drawWinningLine(0, 2, 2, 0);
             return true;
         }
+
+        // Check for a tie
+        boolean isTie = true;
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                if (board[row][col].getText().isEmpty()) {
+                    isTie = false;
+                    break;
+                }
+            }
+        }
+        if (isTie) {
+            return true;
+        }
+        
+
+
         return false;
     }
 
@@ -235,29 +328,60 @@ public class TicTacToe extends Application {
         restartButton.setVisible(true);
     }
 
-    /**
+     /**
      * Resets the game board for a new game.
      */
     private void resetBoard() {
-        // Clear all cells on the board
-        for (int row = 0; row < BOARD_SIZE; row++) {
-            for (int col = 0; col < BOARD_SIZE; col++) {
-                board[row][col].setText("");
+        if (board != null) {
+            // Clear all cells on the board
+            for (int row = 0; row < BOARD_SIZE; row++) {
+                for (int col = 0; col < BOARD_SIZE; col++) {
+                    if (board[row][col] != null) {
+                        board[row][col].setText("");
+                    }
+                }
             }
         }
+
         // Remove the winning line if it exists
         if (winningLine != null) {
             linePane.getChildren().remove(winningLine);
             winningLine = null;
         }
+
         // Hide the restart button
-        restartButton.setVisible(false);
+        if (restartButton != null) {
+            restartButton.setVisible(false);
+        }
+
         // Hide the main menu button
-        mainMenuButton.setVisible(false);
+        if (mainMenuButton != null) {
+            mainMenuButton.setVisible(false);
+        }
+
         // Hide the button container
-        buttonContainer.setVisible(false);
+        if (buttonContainer != null) {
+            buttonContainer.setVisible(false);
+        }
+
         // Reset the game state
         gameOver = false;
+
+        // Reset currentPlayer to the starting player
+        currentPlayer = startingPlayer;
+
+        // If AI is enabled and the AI starts the game, make a move
+        if (isAIEnabled && startingPlayer.equals("O")) {
+            makeAIMove();
+        }
+    }
+
+    /**
+     * Resets to the main menu scene.
+     */
+    private void resetToMainMenu(Stage primaryStage) {
+        resetBoard();
+        primaryStage.setScene(menuScene); // Set back to main menu scene
     }
 
     public static void main(String[] args) {
