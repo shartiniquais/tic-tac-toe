@@ -49,6 +49,28 @@ public class TicTacToe extends Application {
         primaryStage.setScene(menuScene);
         primaryStage.show();
 
+        // Buttons for 1 Player options
+        Button playFirstButton = new Button("Play First");
+        Button playSecondButton = new Button("Play Second");
+        Button goBackButton = new Button("Go Back");
+
+        // VBox for 1 Player buttons
+        VBox onePlayerOptions = new VBox(20);
+        onePlayerOptions.setAlignment(Pos.CENTER);
+        onePlayerOptions.getChildren().addAll(playFirstButton, playSecondButton, goBackButton);
+
+        Scene onePlayerScene = new Scene(onePlayerOptions, 400, 400);
+
+        // Set up action for "1 Player" button
+        onePlayerButton.setOnAction(event -> {
+            primaryStage.setScene(onePlayerScene);
+        });
+
+        // Set up action for "Go Back" button
+        goBackButton.setOnAction(event -> {
+            primaryStage.setScene(menuScene);
+        });
+
         // Game layout
         gameStackPane = new StackPane();
         gameStackPane.setAlignment(Pos.CENTER); // Ensure the grid is centered
@@ -108,7 +130,6 @@ public class TicTacToe extends Application {
         gameContainer.getChildren().addAll(gameStackPane, buttonContainer);
 
         Scene gameScene = new Scene(gameContainer, 400, 500);
-
 
         // Main menu button actions
         twoPlayersButton.setOnAction(event -> {
