@@ -30,6 +30,7 @@ public class TicTacToe extends Application {
     private static final int CELL_SIZE = 100; // Size of each cell
     private static final int SPACING = 10; // Spacing between cells
     private static final int OFFSET = CELL_SIZE / 2; // Offset to center the line in the cell
+    private Button restartButton;
 
     @Override
     public void start(Stage primaryStage) {
@@ -81,9 +82,20 @@ public class TicTacToe extends Application {
         linePane = new Pane(); // Pane to handle drawing the winning line independently
         linePane.setPickOnBounds(false); // Ignore mouse events on the Pane to allow grid interaction
 
+        // Restart button
+        restartButton = new Button("Restart");
+        restartButton.setOnAction(event -> resetBoard());
+        restartButton.setVisible(false); // Hide the restart button initially
+
+        // VBox containing the game grid and restart button
+        VBox gameContainer = new VBox(10);
+        gameContainer.setAlignment(Pos.CENTER);
+        gameContainer.getChildren().addAll(gameStackPane, restartButton);
+
         gameStackPane.getChildren().addAll(gameGrid, linePane); // Add both grid and line pane to the StackPane
 
-        Scene gameScene = new Scene(gameStackPane, 400, 400);
+        Scene gameScene = new Scene(gameContainer, 400, 500);
+
 
         // Main menu button actions
         twoPlayersButton.setOnAction(event -> {
@@ -165,7 +177,7 @@ public class TicTacToe extends Application {
      */
     private void drawWinningLine(int startRow, int startCol, int endRow, int endCol) {
         double gridOffsetX = (400 - (BOARD_SIZE * CELL_SIZE + (BOARD_SIZE - 1) * SPACING)) / 2;
-        double gridOffsetY = (400 - (BOARD_SIZE * CELL_SIZE + (BOARD_SIZE - 1) * SPACING)) / 2;
+        double gridOffsetY = (325 - (BOARD_SIZE * CELL_SIZE + (BOARD_SIZE - 1) * SPACING)) / 2;
 
         // Calculate the starting and ending coordinates of the winning line
         double startX = gridOffsetX + startCol * (CELL_SIZE + SPACING) + OFFSET;
@@ -180,6 +192,9 @@ public class TicTacToe extends Application {
 
         // Add the winning line to linePane
         linePane.getChildren().add(winningLine);
+
+        // Show the restart button
+        restartButton.setVisible(true);
     }
 
     /**
@@ -197,6 +212,10 @@ public class TicTacToe extends Application {
             linePane.getChildren().remove(winningLine);
             winningLine = null;
         }
+        // Hide the restart button
+        restartButton.setVisible(false);
+        // Reset the game state
+        gameOver = false;
     }
 
     public static void main(String[] args) {
