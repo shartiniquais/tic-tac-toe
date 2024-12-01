@@ -39,7 +39,7 @@ public class TicTacToe extends Application {
     private Button restartButton;
     private Button mainMenuButton;
     private VBox buttonContainer;
-    private Random random = new Random();
+    private final Random random = new Random();
     private Scene menuScene;
 
     @Override
@@ -289,13 +289,7 @@ public class TicTacToe extends Application {
                 }
             }
         }
-        if (isTie) {
-            return true;
-        }
-        
-
-
-        return false;
+        return isTie;
     }
 
     /**
