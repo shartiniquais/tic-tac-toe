@@ -31,6 +31,8 @@ public class TicTacToe extends Application {
     private static final int SPACING = 10; // Spacing between cells
     private static final int OFFSET = CELL_SIZE / 2; // Offset to center the line in the cell
     private Button restartButton;
+    private Button mainMenuButton;
+    private VBox buttonContainer;
 
     @Override
     public void start(Stage primaryStage) {
@@ -87,12 +89,23 @@ public class TicTacToe extends Application {
         restartButton.setOnAction(event -> resetBoard());
         restartButton.setVisible(false); // Hide the restart button initially
 
-        // VBox containing the game grid and restart button
+        // Main menu button
+        mainMenuButton = new Button("Main Menu");
+        mainMenuButton.setOnAction(event -> primaryStage.setScene(menuScene));
+        mainMenuButton.setVisible(false); // Hide the main menu button initially
+
+        // VBox containing the restart and main menu buttons
+        buttonContainer = new VBox(10);
+        buttonContainer.setAlignment(Pos.CENTER);
+        buttonContainer.getChildren().addAll(restartButton, mainMenuButton);
+        buttonContainer.setVisible(false); // Hide the button container initially
+
+        // Add game grid, line pane, and button container to the stack pane
+        gameStackPane.getChildren().addAll(gameGrid, linePane);
+
         VBox gameContainer = new VBox(10);
         gameContainer.setAlignment(Pos.CENTER);
-        gameContainer.getChildren().addAll(gameStackPane, restartButton);
-
-        gameStackPane.getChildren().addAll(gameGrid, linePane); // Add both grid and line pane to the StackPane
+        gameContainer.getChildren().addAll(gameStackPane, buttonContainer);
 
         Scene gameScene = new Scene(gameContainer, 400, 500);
 
@@ -124,6 +137,10 @@ public class TicTacToe extends Application {
         // Check if the current player has won
         if (checkWinner()) {
             gameOver = true;
+            // Show the restart and main menu buttons when the game is over
+            restartButton.setVisible(true);
+            mainMenuButton.setVisible(true);
+            buttonContainer.setVisible(true);
             return;
         }
 
@@ -214,6 +231,10 @@ public class TicTacToe extends Application {
         }
         // Hide the restart button
         restartButton.setVisible(false);
+        // Hide the main menu button
+        mainMenuButton.setVisible(false);
+        // Hide the button container
+        buttonContainer.setVisible(false);
         // Reset the game state
         gameOver = false;
     }
